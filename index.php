@@ -5,7 +5,7 @@ $site = [
     'name_en'  => 'AboYounis',
     'title'    => 'AboYounis Personal Website',
     'launch'   => '2007-1-1 00:00:00',   // تاريخ الإطلاق المتوقع
-    'progress' => 65<?php
+    'progress' => 65;
 /* ============ الإعدادات — عدّل من هنا ============ */
 $site = [
     'name_ar'  => 'أبو يونس',
