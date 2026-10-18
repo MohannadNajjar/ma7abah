@@ -2,13 +2,12 @@
 declare(strict_types=1);
 session_set_cookie_params(['httponly'=>true,'samesite'=>'Lax','secure'=>!empty($_SERVER['HTTPS'])]);
 session_start();
-$dir=__DIR__;$passf="$dir/admin_pass.php";$cf="$dir/content.txt";
+$dir=__DIR__;require __DIR__.'/db.php';
 function e($t){return htmlspecialchars((string)$t,ENT_QUOTES,'UTF-8');}
 function q($s){$s=preg_replace('/[\x00-\x1F\x7F]+/u',' ',(string)$s);return mb_substr(trim(str_replace('"','”',$s)),0,2000);}
 $_SESSION['csrf']??=bin2hex(random_bytes(16));$csrf=$_SESSION['csrf'];
 $post=$_SERVER['REQUEST_METHOD']==='POST';
 if($post&&!hash_equals($csrf,(string)($_POST['csrf']??''))){http_response_code(400);exit('طلب غير صالح، أعد تحميل الصفحة.');}
-$hash=is_file($passf)?(require $passf):null;
 $err='';
 function top($t){echo '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>'.e($t).'</title><style>
 :root{--ink:#111a33;--sun:#f0b030;--line:#dde2ec;--mute:#5b6579}*{box-sizing:border-box}
@@ -28,17 +27,21 @@ button,.b{background:var(--sun);color:#2a1d00;border:0;border-radius:999px;paddi
 .th{width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid var(--sun)}
 </style></head><body><div class="w">';}
 function bot(){echo '</div></body></html>';}
+if(!db()){top('خطأ');echo '<div class="box"><h1>قاعدة البيانات غير متصلة</h1><p>تأكد من إضافة المتغير DATABASE_URL في Render ← Environment، ثم أعد النشر.</p></div>';bot();exit;}
+$hash=kv_get('pass');
 
 if(!$hash){
  if($post&&($_POST['a']??'')==='setup'){
-  $p=(string)($_POST['pw']??'');
-  if(mb_strlen($p)<8)$err='كلمة المرور يجب ألا تقل عن 8 أحرف.';
+  $p=(string)($_POST['pw']??'');$sk=(string)getenv('SETUP_KEY');
+  if($sk===''||!hash_equals($sk,(string)($_POST['sk']??'')))$err='مفتاح الإعداد غير صحيح.';
+  elseif(mb_strlen($p)<8)$err='كلمة المرور يجب ألا تقل عن 8 أحرف.';
   elseif($p!==($_POST['pw2']??''))$err='كلمتا المرور غير متطابقتين.';
-  else{file_put_contents($passf,'<?php return '.var_export(password_hash($p,PASSWORD_DEFAULT),true).';',LOCK_EX);session_regenerate_id(true);$_SESSION['ok']=1;$_SESSION['csrf']=bin2hex(random_bytes(16));header('Location: admin.php');exit;}
+  elseif(!kv_set('pass',password_hash($p,PASSWORD_DEFAULT)))$err='تعذّر الحفظ في قاعدة البيانات.';
+  else{session_regenerate_id(true);$_SESSION['ok']=1;$_SESSION['csrf']=bin2hex(random_bytes(16));header('Location: admin.php');exit;}
  }
  top('إعداد لوحة التحكم');echo '<div class="box"><h1>إعداد كلمة المرور</h1><p>اختر كلمة مرور للوحة التحكم (أول مرة فقط).</p>';
  if($err)echo '<div class="er">'.e($err).'</div>';
- echo '<form method="post"><input type="hidden" name="csrf" value="'.e($csrf).'"><input type="hidden" name="a" value="setup"><label>كلمة المرور</label><input type="password" name="pw" required minlength="8" autocomplete="new-password"><label>تأكيد كلمة المرور</label><input type="password" name="pw2" required autocomplete="new-password"><p><button>حفظ ودخول</button></p></form></div>';bot();exit;
+ echo '<form method="post"><input type="hidden" name="csrf" value="'.e($csrf).'"><input type="hidden" name="a" value="setup"><label>مفتاح الإعداد (SETUP_KEY من Render)</label><input type="password" name="sk" required autocomplete="off"><label>كلمة المرور</label><input type="password" name="pw" required minlength="8" autocomplete="new-password"><label>تأكيد كلمة المرور</label><input type="password" name="pw2" required autocomplete="new-password"><p><button>حفظ ودخول</button></p></form></div>';bot();exit;
 }
 if(!($_SESSION['ok']??false)){
  if($post&&($_POST['a']??'')==='login'){
@@ -66,7 +69,7 @@ $G=['project'=>['عناصر الأعمال','عمل',$ic],'stat'=>['الأرقا
 $after=['works'=>'project','about'=>'stat','ideas'=>'idea'];
 $area=['text','p1','p2','p3','p4','description'];
 
-$C=@parse_ini_file($cf,true,INI_SCANNER_RAW)?:[];
+$C=content_parse();
 function v($s,$k){global $C;return trim((string)($C[$s][$k]??''),"\" \t\r");}
 function items($p,$keys){global $C;$o=[];foreach($C as $n=>$s){if(!preg_match('/^'.$p.'\d+$/',$n)||!is_array($s))continue;$r=[];foreach($keys as $k=>$_)$r[$k]=v($n,$k);$o[]=$r;}return $o;}
 
@@ -74,12 +77,15 @@ if($post&&($_POST['a']??'')==='save'){
  $out="; يُحرَّر من لوحة التحكم admin.php\n\n";$warn=[];
  $ln=fn($k,$x)=>$x===''?"$k =":"$k = \"$x\"";
  $photo=q($_POST['site']['photo']??'');
- if(!preg_match('/^[\w.-]+\.(jpg|png|webp)$/i',$photo))$photo=v('site','photo');
+ if(!preg_match('/^([\w.-]+\.(jpg|png|webp)|photo\.php\?v=\d+)$/i',$photo))$photo=v('site','photo');
  if(!empty($_FILES['photo']['tmp_name'])&&($_FILES['photo']['error']??1)===UPLOAD_ERR_OK){
   $i=@getimagesize($_FILES['photo']['tmp_name']);
   $ext=[IMAGETYPE_JPEG=>'jpg',IMAGETYPE_PNG=>'png',IMAGETYPE_WEBP=>'webp'][$i[2]??0]??null;
   if(!$ext||$_FILES['photo']['size']>5000000)$warn[]='الصورة يجب أن تكون JPG أو PNG أو WebP وبحجم أقل من 5MB.';
-  else{$n='photo-'.time().'.'.$ext;if(move_uploaded_file($_FILES['photo']['tmp_name'],"$dir/$n")){$old=v('site','photo');if(strpos($old,'photo-')===0)@unlink("$dir/".basename($old));$photo=$n;}else $warn[]='تعذّر رفع الصورة (تحقق من صلاحيات المجلد).';}
+  else{$mime=[IMAGETYPE_JPEG=>'image/jpeg',IMAGETYPE_PNG=>'image/png',IMAGETYPE_WEBP=>'image/webp'][$i[2]];
+   $b64=base64_encode((string)file_get_contents($_FILES['photo']['tmp_name']));
+   if(kv_set('photo_b64',$b64)&&kv_set('photo_mime',$mime)){@unlink(cache_path('photo.bin'));@unlink(cache_path('photo.mime'));$photo='photo.php?v='.time();}
+   else $warn[]='تعذّر حفظ الصورة في قاعدة البيانات.';}
  }
  foreach($S as $sec=>[$_t,$fs]){
   $out.="[$sec]\n";
@@ -96,10 +102,9 @@ if($post&&($_POST['a']??'')==='save'){
     foreach($G[$g][2] as $k=>$_){$r[$k]=q($row[$k]??'');if($k==='url'&&$r[$k]!==''&&!preg_match('~^https?://~i',$r[$k]))$r[$k]='';if($r[$k]!=='')$any=true;}
     if(!$any)continue;$n++;$out.="[$g$n]\n";foreach($r as $k=>$x)$out.=$ln($k,$x)."\n";$out.="\n";}}
  }
- $tmp=$cf.'.tmp';
- if(is_file($cf))@copy($cf,$dir.'/content.bak');
- if(file_put_contents($tmp,$out,LOCK_EX)!==false&&rename($tmp,$cf)){$_SESSION['flash']=['ok','تم الحفظ.'.($warn?' — '.implode(' ',$warn):'')];}
- else $_SESSION['flash']=['er','تعذّر الحفظ، تحقق من صلاحيات الكتابة على المجلد.'];
+ $old=kv_get('content');if($old!==null)kv_set('content_bak',$old);
+ if(content_save($out)){$_SESSION['flash']=['ok','تم الحفظ.'.($warn?' — '.implode(' ',$warn):'')];}
+ else $_SESSION['flash']=['er','تعذّر الحفظ في قاعدة البيانات، حاول مرة أخرى.'];
  header('Location: admin.php');exit;
 }
 $fl=$_SESSION['flash']??null;unset($_SESSION['flash']);

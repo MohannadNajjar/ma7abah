@@ -1,5 +1,6 @@
 <?php
-$C=@parse_ini_file(__DIR__.'/content.txt',true,INI_SCANNER_RAW)?:[];
+require __DIR__.'/db.php';
+$C=content_parse();
 function v($s,$k){global $C;return trim((string)($C[$s][$k]??''),"\" \t\r");}
 function e($t){return htmlspecialchars($t,ENT_QUOTES,'UTF-8');}
 function items($p,$keys){global $C;$o=[];foreach($C as $n=>$s){if(!preg_match('/^'.$p.'\d+$/',$n)||!is_array($s))continue;$r=[];$any=false;foreach($keys as $k){$r[$k]=v($n,$k);if($r[$k]!=='')$any=true;}if($any)$o[]=$r;}return $o;}
@@ -36,7 +37,7 @@ echo '<div>';if($p['title']!=='')echo '<h3>'.e($p['title']).'</h3>';if($p['text'
 <meta property="og:locale" content="ar_AR">
 <meta property="og:title" content="<?=e(v('site','title')?:$name)?>">
 <?php if($base):?><meta property="og:url" content="<?=e($base)?>">
-<?php if($photo!==''):?><meta property="og:image" content="<?=e($base.rawurlencode($photo))?>">
+<?php if($photo!==''):?><meta property="og:image" content="<?=e($base.(strpos($photo,'?')!==false?$photo:rawurlencode($photo)))?>">
 <?php endif;endif;?><meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#101a33">
 <link rel="preconnect" href="https://fonts.googleapis.com">
