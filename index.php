@@ -5,19 +5,24 @@ function e($t){return htmlspecialchars($t,ENT_QUOTES,'UTF-8');}
 function items($p,$keys){global $C;$o=[];foreach($C as $n=>$s){if(!preg_match('/^'.$p.'\d+$/',$n)||!is_array($s))continue;$r=[];$any=false;foreach($keys as $k){$r[$k]=v($n,$k);if($r[$k]!=='')$any=true;}if($any)$o[]=$r;}return $o;}
 function h2($t){return $t!==''?'<h2>'.e($t).'</h2>':'';}
 $email=v('site','email');if(!filter_var($email,FILTER_VALIDATE_EMAIL))$email='';
-$photo=v('site','photo');$name=v('site','name');
-$projects=items('project',['icon','title','text']);
-$ideas=items('idea',['icon','title','text']);
+$photo=v('site','photo');$name=v('site','name');$desc=v('site','description');
+$host=$_SERVER['HTTP_HOST']??'';$https=(!empty($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!=='off')||($_SERVER['HTTP_X_FORWARDED_PROTO']??'')==='https';
+$base=preg_match('/^[A-Za-z0-9.-]+(:\d+)?$/',$host)?($https?'https':'http').'://'.$host.rtrim(str_replace('\\','/',dirname($_SERVER['SCRIPT_NAME'])),'/').'/':'';
+$projects=items('project',['icon','title','text','url']);
+$ideas=items('idea',['icon','title','text','url']);
 $stats=items('stat',['num','label']);
 $about=array_filter(array_map(fn($k)=>v('about',$k),['p1','p2','p3','p4']));
 $hasAbout=$about||$stats;
 $title=v('hero','title');$mark=v('hero','highlight');$t=e($title);
 if($mark!==''&&strpos($t,e($mark))!==false)$t=str_replace(e($mark),'<span>'.e($mark).'</span>',$t);
 $chips=[];foreach(['c1','c2','c3','c4'] as $k){$x=v('chips',$k);if($x!=='')$chips[$k]=$x;}
-$soc=[];foreach(['instagram'=>'Instagram','x'=>'X','linkedin'=>'LinkedIn','github'=>'GitHub'] as $k=>$l){$u=v('social',$k);if(preg_match('~^https?://~i',$u))$soc[$l]=$u;}
-function cards($list){foreach($list as $i=>$p){echo '<article class="card'.($i==0&&$GLOBALS['feat']?' wide':'').'">';
+$ICONS=require __DIR__.'/icons.php';$soc=[];foreach($ICONS as $k=>$d){$u=v('social',$k);if(preg_match('~^https?://~i',$u))$soc[$k]=$u;}
+$ctaOn=$email&&(v('cta','title')!==''||v('cta','text')!==''||v('cta','button')!=='');
+$tg=['c2'=>$ideas?'#ideas':'','c3'=>$projects?'#works':'','c4'=>$ctaOn?'#contact':''];
+function cards($list){foreach($list as $i=>$p){$u=preg_match('~^https?://~i',$p['url'])?$p['url']:'';$tg=$u?'a':'article';
+echo '<'.$tg.' class="card'.($i==0&&$GLOBALS['feat']?' wide':'').($u?' lnk':'').'"'.($u?' href="'.e($u).'" target="_blank" rel="noopener"':'').'>';
 if($p['icon']!=='')echo '<div class="ico">'.e($p['icon']).'</div>';
-echo '<div>';if($p['title']!=='')echo '<h3>'.e($p['title']).'</h3>';if($p['text']!=='')echo '<p>'.e($p['text']).'</p>';echo '</div></article>';}}
+echo '<div>';if($p['title']!=='')echo '<h3>'.e($p['title']).'</h3>';if($p['text']!=='')echo '<p>'.e($p['text']).'</p>';echo '</div>'.($u?'<span class="go" aria-hidden="true">←</span>':'').'</'.$tg.'>';}}
 ?>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -25,6 +30,15 @@ echo '<div>';if($p['title']!=='')echo '<h3>'.e($p['title']).'</h3>';if($p['text'
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title><?=e(v('site','title')?:$name)?></title>
+<?php if($desc!==''):?><meta name="description" content="<?=e($desc)?>">
+<meta property="og:description" content="<?=e($desc)?>">
+<?php endif;?><meta property="og:type" content="website">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:title" content="<?=e(v('site','title')?:$name)?>">
+<?php if($base):?><meta property="og:url" content="<?=e($base)?>">
+<?php if($photo!==''):?><meta property="og:image" content="<?=e($base.rawurlencode($photo))?>">
+<?php endif;endif;?><meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#101a33">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800;900&display=swap" rel="stylesheet">
 <style>
@@ -57,7 +71,10 @@ h1 span{background:linear-gradient(transparent 62%,var(--sun) 62%)}
 .intro p{max-width:34em;margin:0 auto 26px;color:var(--mute);font-size:1.1rem}
 .contactbar{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;border-top:1px solid var(--line);margin-top:44px;padding-top:22px;text-align:start}
 .contactbar a{text-decoration:none;font-weight:700}
-.social{display:flex;gap:18px;font-weight:600;color:var(--mute)}
+.social{display:flex;flex-wrap:wrap;gap:10px}
+.si{width:44px;height:44px;display:grid;place-items:center;border-radius:50%;background:var(--surface);border:1px solid var(--line);color:var(--ink);transition:transform .2s,background .2s,color .2s}
+.si:hover{background:var(--sun);color:var(--sun-ink);transform:translateY(-3px)}
+a.chip{text-decoration:none}a.chip:hover{background:var(--sun);color:var(--sun-ink)}
 .sec{padding:30px 0 60px}
 .sec h2{display:flex;align-items:center;gap:16px;font-size:1.8rem;margin:0 0 28px;font-weight:800}
 .sec h2::before{content:"";width:60px;height:3px;background:var(--sun);border-radius:2px}
@@ -66,6 +83,9 @@ h1 span{background:linear-gradient(transparent 62%,var(--sun) 62%)}
 .card:hover{transform:translateY(-5px);border-color:var(--sun)}
 .ico{width:46px;height:46px;border-radius:14px;background:var(--sun);display:grid;place-items:center;font-size:1.4rem;flex:none}
 .card h3{margin:0;font-size:1.2rem}.card p{margin:0;color:var(--mute)}
+a.card{text-decoration:none;color:inherit}
+.card .go{margin-top:auto;font-size:1.5rem;font-weight:800;color:var(--sun)}
+.card.wide .go{margin-top:0;margin-inline-start:auto}
 .card.wide{grid-column:1/-1;flex-direction:row;align-items:center;gap:26px;background:var(--hero);color:#eef1f8;border:0}
 .card.wide p{color:#b6c0d8}
 .about{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:center}
@@ -91,12 +111,12 @@ footer{padding:30px 0 40px;text-align:center;color:var(--mute);font-size:.9rem}
 <?php if($projects&&v('works','title')!==''):?><li><a href="#works"><?=e(v('works','title'))?></a></li><?php endif;?>
 <?php if($ideas&&v('ideas','title')!==''):?><li><a href="#ideas"><?=e(v('ideas','title'))?></a></li><?php endif;?>
 </ul>
-<?php if($email&&v('site','nav_button')!==''):?><a class="btn" href="#contact"><?=e(v('site','nav_button'))?></a><?php endif;?>
+<?php if($email&&v('site','nav_button')!==''):?><a class="btn" href="<?=$ctaOn?'#contact':'mailto:'.e($email)?>"><?=e(v('site','nav_button'))?></a><?php endif;?>
 </nav>
 
 <header class="hero">
 <div class="wrap stage" id="stage">
-<?php foreach($chips as $k=>$x):?><span class="chip <?=$k?>" data-d="<?=['c1'=>14,'c2'=>-10,'c3'=>-16,'c4'=>12][$k]?>"><?=e($x)?></span>
+<?php foreach($chips as $k=>$x):$h=$tg[$k]??'';$tag=$h?'a':'span';?><<?=$tag?> class="chip <?=$k?>" data-d="<?=['c1'=>14,'c2'=>-10,'c3'=>-16,'c4'=>12][$k]?>"<?=$h?' href="'.$h.'"':''?>><?=e($x)?></<?=$tag?>>
 <?php endforeach;?>
 <?php if($photo!==''):?><div class="photo"><img src="<?=e($photo)?>" alt="<?=e(v('site','photo_alt'))?>" width="640" height="640" fetchpriority="high"></div><?php endif;?>
 </div>
@@ -111,7 +131,7 @@ footer{padding:30px 0 40px;text-align:center;color:var(--mute);font-size:.9rem}
 <?php if($projects&&v('hero','button')!==''):?><a class="btn" href="#works"><?=e(v('hero','button'))?></a><?php endif;?>
 <?php if($email||$soc):?><div class="contactbar">
 <?php if($email):?><span><a href="mailto:<?=e($email)?>"><?=e($email)?></a></span><?php endif;?>
-<?php if($soc):?><span class="social"><?php foreach($soc as $l=>$u):?><a href="<?=e($u)?>" rel="noopener"><?=e($l)?></a><?php endforeach;?></span><?php endif;?>
+<?php if($soc):?><span class="social"><?php foreach($soc as $k=>$u):$d=$ICONS[$k];?><a class="si" href="<?=e($u)?>" target="_blank" rel="noopener" aria-label="<?=e($d[0])?>" title="<?=e($d[0])?>"><svg viewBox="0 0 <?=$d[1]?> <?=$d[2]?>" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="<?=$d[3]?>"/></svg></a><?php endforeach;?></span><?php endif;?>
 </div><?php endif;?>
 </section>
 <?php endif;?>
@@ -132,7 +152,7 @@ footer{padding:30px 0 40px;text-align:center;color:var(--mute);font-size:.9rem}
 <section class="sec" id="ideas"><?=h2(v('ideas','title'))?><div class="grid"><?php cards($ideas);?></div></section>
 <?php endif;?>
 
-<?php if($email&&(v('cta','title')!==''||v('cta','text')!==''||v('cta','button')!=='')):?>
+<?php if($ctaOn):?>
 <section class="sec" id="contact"><div class="cta">
 <?=h2(v('cta','title'))?>
 <?php if(v('cta','text')!==''):?><p><?=e(v('cta','text'))?></p><?php endif;?>

@@ -51,19 +51,20 @@ if(!($_SESSION['ok']??false)){
 }
 if($post&&($_POST['a']??'')==='logout'){session_destroy();header('Location: admin.php');exit;}
 
+$ICONS=require __DIR__.'/icons.php';$soc=[];foreach($ICONS as $k=>$d)$soc[$k]=$d[0];
 $S=[
-'site'=>['بيانات الموقع',['title'=>'عنوان الصفحة (تبويب المتصفح)','name'=>'الاسم','photo_alt'=>'وصف الصورة','email'=>'البريد الإلكتروني','nav_button'=>'نص زر القائمة','footer'=>'نص التذييل']],
+'site'=>['بيانات الموقع',['title'=>'عنوان الصفحة (تبويب المتصفح)','name'=>'الاسم','photo_alt'=>'وصف الصورة','description'=>'وصف الموقع (يظهر في البحث وعند مشاركة الرابط)','email'=>'البريد الإلكتروني','nav_button'=>'نص زر القائمة','footer'=>'نص التذييل']],
 'hero'=>['الواجهة الأولى',['greeting'=>'التحية','title'=>'العنوان الرئيسي','highlight'=>'كلمة مميّزة داخل العنوان','text'=>'النص','button'=>'نص زر الأعمال']],
 'chips'=>['الشارات حول الصورة',['c1'=>'الشارة 1','c2'=>'الشارة 2','c3'=>'الشارة 3','c4'=>'الشارة 4']],
-'social'=>['روابط التواصل (تبدأ بـ https://)',['instagram'=>'Instagram','x'=>'X','linkedin'=>'LinkedIn','github'=>'GitHub']],
+'social'=>['روابط التواصل (رابط كامل يبدأ بـ https:// — ما تتركه فارغًا لا يظهر)',$soc],
 'works'=>['قسم الأعمال',['title'=>'عنوان القسم']],
 'about'=>['قسم النبذة',['title'=>'عنوان القسم','p1'=>'فقرة 1','p2'=>'فقرة 2','p3'=>'فقرة 3','p4'=>'فقرة 4']],
 'ideas'=>['قسم الأفكار',['title'=>'عنوان القسم']],
 'cta'=>['بطاقة التواصل الأخيرة',['title'=>'العنوان','text'=>'النص','button'=>'نص الزر']]];
-$ic=['icon'=>'أيقونة (إيموجي)','title'=>'العنوان','text'=>'الوصف'];
+$ic=['icon'=>'أيقونة (إيموجي)','title'=>'العنوان','text'=>'الوصف','url'=>'رابط (اختياري، يبدأ بـ https://)'];
 $G=['project'=>['عناصر الأعمال','عمل',$ic],'stat'=>['الأرقام','رقم',['num'=>'الرقم','label'=>'الوصف']],'idea'=>['عناصر الأفكار','فكرة',$ic]];
 $after=['works'=>'project','about'=>'stat','ideas'=>'idea'];
-$area=['text','p1','p2','p3','p4'];
+$area=['text','p1','p2','p3','p4','description'];
 
 $C=@parse_ini_file($cf,true,INI_SCANNER_RAW)?:[];
 function v($s,$k){global $C;return trim((string)($C[$s][$k]??''),"\" \t\r");}
@@ -92,7 +93,7 @@ if($post&&($_POST['a']??'')==='save'){
   $out.="\n";
   if(isset($after[$sec])){$g=$after[$sec];$n=0;
    foreach(($_POST[$g]??[]) as $row){if(!is_array($row))continue;$r=[];$any=false;
-    foreach($G[$g][2] as $k=>$_){$r[$k]=q($row[$k]??'');if($r[$k]!=='')$any=true;}
+    foreach($G[$g][2] as $k=>$_){$r[$k]=q($row[$k]??'');if($k==='url'&&$r[$k]!==''&&!preg_match('~^https?://~i',$r[$k]))$r[$k]='';if($r[$k]!=='')$any=true;}
     if(!$any)continue;$n++;$out.="[$g$n]\n";foreach($r as $k=>$x)$out.=$ln($k,$x)."\n";$out.="\n";}}
  }
  $tmp=$cf.'.tmp';

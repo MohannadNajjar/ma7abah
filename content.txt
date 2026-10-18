@@ -6,6 +6,7 @@ title = أبو يونس — الموقع الشخصي
 name = أبو يونس
 photo = me.jpg
 photo_alt = صورة أبو يونس
+description = الموقع الشخصي لأبو يونس: أعماله وأفكاره وطريقة التواصل معه.
 email = mahabagroup@gmail.com
 nav_button = تواصل معي
 footer = © 2026 أبو يونس — جميع الحقوق محفوظة
@@ -24,10 +25,24 @@ text = هذه مساحتي الشخصية: أعمالي، وما أفكر فيه
 button = شاهد أعمالي
 
 [social]
+facebook =
 instagram = https://www.instagram.com/mohannadnajjar
 x =
+youtube =
+tiktok =
+whatsapp =
+telegram =
+snapchat =
+threads =
 linkedin =
 github =
+behance =
+dribbble =
+pinterest =
+twitch =
+discord =
+medium =
+reddit =
 
 ; ---------- الأعمال: أضف [project2] و[project3] ... بالطريقة نفسها ----------
 [works]
@@ -37,6 +52,7 @@ title =
 icon =
 title =
 text =
+url =
 
 ; ---------- نبذة: الفقرات p1 إلى p4 والأرقام [stat1] ... ----------
 [about]
@@ -56,6 +72,7 @@ title =
 icon =
 title =
 text =
+url =
 
 [cta]
 title = لديك فكرة أو مشروع؟
