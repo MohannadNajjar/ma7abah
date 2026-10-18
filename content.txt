@@ -1,0 +1,63 @@
+; ملف المحتوى: اكتب القيمة بعد علامة = ، وإن تركتها فارغة فلن يظهر العنصر في الصفحة.
+; إن احتوت القيمة على الفاصلة المنقوطة ; فضعها بين علامتي اقتباس "..."
+
+[site]
+title = أبو يونس — الموقع الشخصي
+name = أبو يونس
+photo = me.jpg
+photo_alt = صورة أبو يونس
+email = mahabagroup@gmail.com
+nav_button = تواصل معي
+footer = © 2026 أبو يونس — جميع الحقوق محفوظة
+
+[chips]
+c1 = 👋 أهلًا بك
+c2 = 💡 أفكاري
+c3 = 🛠️ أعمالي
+c4 = ✉️ تواصل معي
+
+[hero]
+greeting = مرحبًا، أنا أبو يونس
+title = أصنع أشياء مفيدة وأشاركها هنا
+highlight = مفيدة
+text = هذه مساحتي الشخصية: أعمالي، وما أفكر فيه، وأقصر طريق للتواصل معي.
+button = شاهد أعمالي
+
+[social]
+instagram = https://www.instagram.com/mohannadnajjar
+x =
+linkedin =
+github =
+
+; ---------- الأعمال: أضف [project2] و[project3] ... بالطريقة نفسها ----------
+[works]
+title =
+
+[project1]
+icon =
+title =
+text =
+
+; ---------- نبذة: الفقرات p1 إلى p4 والأرقام [stat1] ... ----------
+[about]
+title =
+p1 =
+p2 =
+
+[stat1]
+num =
+label =
+
+; ---------- الأفكار: أضف [idea2] و[idea3] ... ----------
+[ideas]
+title =
+
+[idea1]
+icon =
+title =
+text =
+
+[cta]
+title = لديك فكرة أو مشروع؟
+text = راسلني وسأرد عليك في أقرب وقت.
+button = أرسل رسالة

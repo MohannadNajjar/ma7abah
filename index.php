@@ -1,139 +1,152 @@
 <?php
-/* الإعدادات: launch = تاريخ الإطلاق، progress = نسبة الإنجاز */
-$name_ar  = 'أبو يونس';
-$name_en  = 'AboYounis';
-$title    = 'AboYounis Personal Website';
-$launch   = '2027-01-01 00:00:00';
-$progress = 35;
-$email    = 'mahabagroup@gmail.com';
-$link_x   = '#';
-$link_ig  = 'https://www.instagram.com/mohannadnajjar';
-$link_in  = '#';
-$link_gh  = '#';
-
-/* استقبال البريد */
-$msg = ''; $ok = false;
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $mail = filter_var(trim($_POST['email'] ?? ''), FILTER_VALIDATE_EMAIL);
-    if (!empty($_POST['website'])) {
-        $msg = 'تعذّر إرسال الطلب.';
-    } elseif (!$mail) {
-        $msg = 'اكتب بريدًا إلكترونيًا صحيحًا.';
-    } else {
-        file_put_contents(__DIR__ . '/subscribers.txt', $mail . PHP_EOL, FILE_APPEND | LOCK_EX);
-        $ok = true;
-        $msg = 'تم التسجيل. سنراسلك عند الإطلاق.';
-    }
-}
-$h = fn($s) => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
-$launchTs = strtotime($launch) * 1000;
+$C=@parse_ini_file(__DIR__.'/content.txt',true,INI_SCANNER_RAW)?:[];
+function v($s,$k){global $C;return trim((string)($C[$s][$k]??''),"\" \t\r");}
+function e($t){return htmlspecialchars($t,ENT_QUOTES,'UTF-8');}
+function items($p,$keys){global $C;$o=[];foreach($C as $n=>$s){if(!preg_match('/^'.$p.'\d+$/',$n)||!is_array($s))continue;$r=[];$any=false;foreach($keys as $k){$r[$k]=v($n,$k);if($r[$k]!=='')$any=true;}if($any)$o[]=$r;}return $o;}
+function h2($t){return $t!==''?'<h2>'.e($t).'</h2>':'';}
+$email=v('site','email');if(!filter_var($email,FILTER_VALIDATE_EMAIL))$email='';
+$photo=v('site','photo');$name=v('site','name');
+$projects=items('project',['icon','title','text']);
+$ideas=items('idea',['icon','title','text']);
+$stats=items('stat',['num','label']);
+$about=array_filter(array_map(fn($k)=>v('about',$k),['p1','p2','p3','p4']));
+$hasAbout=$about||$stats;
+$title=v('hero','title');$mark=v('hero','highlight');$t=e($title);
+if($mark!==''&&strpos($t,e($mark))!==false)$t=str_replace(e($mark),'<span>'.e($mark).'</span>',$t);
+$chips=[];foreach(['c1','c2','c3','c4'] as $k){$x=v('chips',$k);if($x!=='')$chips[$k]=$x;}
+$soc=[];foreach(['instagram'=>'Instagram','x'=>'X','linkedin'=>'LinkedIn','github'=>'GitHub'] as $k=>$l){$u=v('social',$k);if(preg_match('~^https?://~i',$u))$soc[$l]=$u;}
+function cards($list){foreach($list as $i=>$p){echo '<article class="card'.($i==0&&$GLOBALS['feat']?' wide':'').'">';
+if($p['icon']!=='')echo '<div class="ico">'.e($p['icon']).'</div>';
+echo '<div>';if($p['title']!=='')echo '<h3>'.e($p['title']).'</h3>';if($p['text']!=='')echo '<p>'.e($p['text']).'</p>';echo '</div></article>';}}
 ?>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><?= $h($title) ?> — قيد الإنشاء</title>
-  <meta name="description" content="الموقع الشخصي لأبو يونس — قيد الإنشاء وسيُطلق قريبًا.">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%230B3B3C' stroke='%23E3B04B' stroke-width='3'/%3E%3Ctext x='32' y='42' font-size='28' text-anchor='middle' fill='%23E3B04B' font-family='serif'%3EAY%3C/text%3E%3C/svg%3E">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Reem+Kufi:wght@500;700&family=Tajawal:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title><?=e(v('site','title')?:$name)?></title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f5f9;--surface:#fff;--ink:#111a33;--mute:#5b6579;--line:#dde2ec;--sun:#f0b030;--sun-ink:#2a1d00;--leaf:#5f8f66;--hero:#101a33}
+@media (prefers-color-scheme:dark){:root{--bg:#0b1226;--surface:#141e3a;--ink:#eef1f8;--mute:#9aa6bf;--line:#26325a;--hero:#070d1e}}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:90px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Cairo,Tahoma,system-ui,sans-serif;line-height:1.8;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--sun);outline-offset:3px;border-radius:8px}
+.wrap{width:min(1080px,100% - 40px);margin-inline:auto}
+nav{position:sticky;top:12px;z-index:10;margin:12px auto 0;width:min(1080px,100% - 28px);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 18px;background:color-mix(in srgb,var(--surface) 90%,transparent);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:18px}
+nav b{font-weight:900;font-size:1.15rem}
+nav ul{display:flex;gap:22px;list-style:none;margin:0;padding:0;font-weight:600;font-size:.95rem}
+nav ul a{text-decoration:none;color:var(--mute)}nav ul a:hover{color:var(--ink)}
+.btn{display:inline-block;background:var(--sun);color:var(--sun-ink);font-weight:800;text-decoration:none;padding:10px 22px;border-radius:999px;transition:transform .2s}
+.btn:hover{transform:translateY(-2px)}
+.hero{margin-top:-64px;padding:110px 0 0;background:var(--hero);clip-path:polygon(0 0,100% 0,100% 82%,0 100%);position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:auto -10% -30% auto;width:60%;aspect-ratio:1;background:radial-gradient(circle,var(--leaf) 0,transparent 65%);opacity:.35}
+.stage{position:relative;height:min(430px,88vw);display:grid;place-items:center;padding-bottom:30px}
+.photo{position:relative;z-index:1;width:min(330px,68vw);aspect-ratio:1;border-radius:50%;border:8px solid var(--sun);overflow:hidden;background:var(--sun);box-shadow:0 30px 60px -20px #0009;animation:rise .9s cubic-bezier(.2,.8,.2,1) both}
+.photo img{width:100%;height:100%;object-fit:cover;display:block}
+.chip{position:absolute;z-index:2;background:var(--surface);color:var(--ink);padding:8px 18px;border-radius:999px;font-weight:700;font-size:.95rem;box-shadow:0 14px 30px -12px #0008;transition:transform .25s ease-out;white-space:nowrap}
+.c1{top:14%;right:6%}.c2{top:8%;left:8%}.c3{bottom:26%;left:4%}.c4{bottom:20%;right:4%}
+@keyframes rise{from{opacity:0;transform:scale(.85) translateY(24px)}}
+.intro{text-align:center;padding:36px 0 50px}
+.intro small{color:var(--mute);font-weight:600}
+h1{font-size:clamp(2rem,6vw,3.6rem);line-height:1.25;margin:.2em auto .3em;font-weight:900;max-width:16em}
+h1 span{background:linear-gradient(transparent 62%,var(--sun) 62%)}
+.intro p{max-width:34em;margin:0 auto 26px;color:var(--mute);font-size:1.1rem}
+.contactbar{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;border-top:1px solid var(--line);margin-top:44px;padding-top:22px;text-align:start}
+.contactbar a{text-decoration:none;font-weight:700}
+.social{display:flex;gap:18px;font-weight:600;color:var(--mute)}
+.sec{padding:30px 0 60px}
+.sec h2{display:flex;align-items:center;gap:16px;font-size:1.8rem;margin:0 0 28px;font-weight:800}
+.sec h2::before{content:"";width:60px;height:3px;background:var(--sun);border-radius:2px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:26px;display:flex;flex-direction:column;gap:10px;transition:transform .25s,border-color .25s}
+.card:hover{transform:translateY(-5px);border-color:var(--sun)}
+.ico{width:46px;height:46px;border-radius:14px;background:var(--sun);display:grid;place-items:center;font-size:1.4rem;flex:none}
+.card h3{margin:0;font-size:1.2rem}.card p{margin:0;color:var(--mute)}
+.card.wide{grid-column:1/-1;flex-direction:row;align-items:center;gap:26px;background:var(--hero);color:#eef1f8;border:0}
+.card.wide p{color:#b6c0d8}
+.about{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:center}
+.about.one{grid-template-columns:1fr}
+.about p{color:var(--mute);font-size:1.1rem;margin:0 0 14px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.stats div{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:20px;font-weight:600;color:var(--mute)}
+.stats b{display:block;font-size:2rem;color:var(--ink);font-weight:900}
+.cta{background:var(--sun);color:var(--sun-ink);border-radius:32px;padding:clamp(28px,6vw,60px);text-align:center}
+.cta h2{justify-content:center;margin:0 0 8px;font-size:clamp(1.6rem,4vw,2.4rem)}.cta h2::before{display:none}
+.cta p{margin:0 0 22px;font-size:1.1rem}
+.cta .btn{background:var(--ink);color:var(--bg);font-size:1.05rem;padding:12px 30px}
+footer{padding:30px 0 40px;text-align:center;color:var(--mute);font-size:.9rem}
+@media(max-width:720px){nav ul{display:none}.about{grid-template-columns:1fr}.chip{font-size:.8rem;padding:6px 12px}.card.wide{flex-direction:column;align-items:flex-start}.c1{right:2%}.c2{left:2%}.c3{left:0}.c4{right:0}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto}}
+</style>
 </head>
 <body>
-  <main class="stage">
+<nav aria-label="التنقل الرئيسي">
+<b><?=e($name)?></b>
+<ul>
+<?php if($hasAbout&&v('about','title')!==''):?><li><a href="#about"><?=e(v('about','title'))?></a></li><?php endif;?>
+<?php if($projects&&v('works','title')!==''):?><li><a href="#works"><?=e(v('works','title'))?></a></li><?php endif;?>
+<?php if($ideas&&v('ideas','title')!==''):?><li><a href="#ideas"><?=e(v('ideas','title'))?></a></li><?php endif;?>
+</ul>
+<?php if($email&&v('site','nav_button')!==''):?><a class="btn" href="#contact"><?=e(v('site','nav_button'))?></a><?php endif;?>
+</nav>
 
-    <header class="brand">
-      <div class="logo" role="img" aria-label="شعار أبو يونس">
-        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stop-color="#F6D98B"/>
-              <stop offset="0.5" stop-color="#E3B04B"/>
-              <stop offset="1" stop-color="#B98524"/>
-            </linearGradient>
-          </defs>
-          <g class="ring">
-            <circle cx="100" cy="100" r="94" fill="none" stroke="url(#gold)" stroke-width="1.5" stroke-dasharray="2 7"/>
-          </g>
-          <circle cx="100" cy="100" r="82" fill="#0A3132" stroke="url(#gold)" stroke-width="3"/>
-          <circle cx="100" cy="100" r="72" fill="none" stroke="url(#gold)" stroke-width="0.8" opacity=".6"/>
-          <!-- A -->
-          <path d="M52 140 L82 58 L112 140" fill="none" stroke="url(#gold)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M64 114 H100" stroke="url(#gold)" stroke-width="6" stroke-linecap="round"/>
-          <!-- Y -->
-          <path d="M104 58 L132 96 L160 58 M132 96 V140" fill="none" stroke="#F4EFE3" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="132" cy="46" r="4.5" fill="url(#gold)"/>
-        </svg>
-      </div>
-      <h1 class="wordmark"><span class="en"><?= $h($name_en) ?></span></h1>
-      <p class="name-ar"><?= $h($name_ar) ?></p>
-    </header>
+<header class="hero">
+<div class="wrap stage" id="stage">
+<?php foreach($chips as $k=>$x):?><span class="chip <?=$k?>" data-d="<?=['c1'=>14,'c2'=>-10,'c3'=>-16,'c4'=>12][$k]?>"><?=e($x)?></span>
+<?php endforeach;?>
+<?php if($photo!==''):?><div class="photo"><img src="<?=e($photo)?>" alt="<?=e(v('site','photo_alt'))?>" width="640" height="640" fetchpriority="high"></div><?php endif;?>
+</div>
+</header>
 
-    <section class="message">
-      <h2>موقعي الشخصي قيد الإنشاء</h2>
-      <p>أجهّز مساحة تجمع أعمالي وأفكاري وطريقة التواصل معي في مكان واحد. سأفتحها لك قريبًا.</p>
-    </section>
+<main class="wrap">
+<?php if($title!==''||v('hero','text')!==''||$email||$soc):?>
+<section class="intro">
+<?php if(v('hero','greeting')!==''):?><small><?=e(v('hero','greeting'))?></small><?php endif;?>
+<?php if($title!==''):?><h1><?=$t?></h1><?php endif;?>
+<?php if(v('hero','text')!==''):?><p><?=e(v('hero','text'))?></p><?php endif;?>
+<?php if($projects&&v('hero','button')!==''):?><a class="btn" href="#works"><?=e(v('hero','button'))?></a><?php endif;?>
+<?php if($email||$soc):?><div class="contactbar">
+<?php if($email):?><span><a href="mailto:<?=e($email)?>"><?=e($email)?></a></span><?php endif;?>
+<?php if($soc):?><span class="social"><?php foreach($soc as $l=>$u):?><a href="<?=e($u)?>" rel="noopener"><?=e($l)?></a><?php endforeach;?></span><?php endif;?>
+</div><?php endif;?>
+</section>
+<?php endif;?>
 
-    <section class="countdown" aria-label="الوقت المتبقي للإطلاق" data-launch="<?= $launchTs ?>">
-      <div><b id="d">00</b><span>يوم</span></div>
-      <div><b id="hh">00</b><span>ساعة</span></div>
-      <div><b id="m">00</b><span>دقيقة</span></div>
-      <div><b id="s">00</b><span>ثانية</span></div>
-    </section>
+<?php if($projects):$feat=true;?>
+<section class="sec" id="works"><?=h2(v('works','title'))?><div class="grid"><?php cards($projects);?></div></section>
+<?php endif;?>
 
-    <section class="progress" aria-label="نسبة الإنجاز">
-      <div class="bar" role="progressbar" aria-valuenow="<?= (int)$progress ?>" aria-valuemin="0" aria-valuemax="100">
-        <i style="--p: <?= (int)$progress ?>%"></i>
-      </div>
-      <p>اكتمل <?= (int)$progress ?>٪ من العمل</p>
-    </section>
+<?php if($hasAbout):?>
+<section class="sec" id="about"><?=h2(v('about','title'))?>
+<div class="about<?=($about&&$stats)?'':' one'?>">
+<?php if($about):?><div><?php foreach($about as $p):?><p><?=e($p)?></p><?php endforeach;?></div><?php endif;?>
+<?php if($stats):?><div class="stats"><?php foreach($stats as $s):?><div><?php if($s['num']!==''):?><b><?=e($s['num'])?></b><?php endif;?><?=e($s['label'])?></div><?php endforeach;?></div><?php endif;?>
+</div></section>
+<?php endif;?>
 
-    <form class="notify" method="post" action="">
-      <label for="email">سجّل بريدك لتصلك رسالة عند الإطلاق</label>
-      <div class="field">
-        <input type="email" id="email" name="email" placeholder="name@example.com" dir="ltr" required>
-        <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-        <button type="submit">أبلغني</button>
-      </div>
-      <?php if ($msg): ?>
-        <p class="note <?= $ok ? 'ok' : 'err' ?>" role="status"><?= $h($msg) ?></p>
-      <?php endif; ?>
-    </form>
+<?php if($ideas):$feat=false;?>
+<section class="sec" id="ideas"><?=h2(v('ideas','title'))?><div class="grid"><?php cards($ideas);?></div></section>
+<?php endif;?>
 
-    <nav class="social" aria-label="روابط التواصل">
-      <a href="<?= $h($link_x) ?>" target="_blank" rel="noopener">X</a>
-      <a href="<?= $h($link_ig) ?>" target="_blank" rel="noopener">Instagram</a>
-      <a href="<?= $h($link_in) ?>" target="_blank" rel="noopener">LinkedIn</a>
-      <a href="<?= $h($link_gh) ?>" target="_blank" rel="noopener">GitHub</a>
-    </nav>
-
-    <footer>
-      <a class="mail" href="mailto:<?= $h($email) ?>" dir="ltr"><?= $h($email) ?></a>
-      <p>© <?= date('Y') ?> <?= $h($name_ar) ?> — جميع الحقوق محفوظة</p>
-    </footer>
-
-  </main>
-
-  <script>
-    (function () {
-      var box = document.querySelector('.countdown');
-      var t = +box.dataset.launch;
-      var ids = { d: 'd', hh: 'hh', m: 'm', s: 's' };
-      function pad(n) { return String(n).padStart(2, '0'); }
-      function tick() {
-        var r = Math.max(0, t - Date.now());
-        var v = {
-          d: Math.floor(r / 864e5),
-          hh: Math.floor(r % 864e5 / 36e5),
-          m: Math.floor(r % 36e5 / 6e4),
-          s: Math.floor(r % 6e4 / 1e3)
-        };
-        for (var k in ids) document.getElementById(ids[k]).textContent = pad(v[k]);
-      }
-      tick(); setInterval(tick, 1000);
-    })();
-  </script>
+<?php if($email&&(v('cta','title')!==''||v('cta','text')!==''||v('cta','button')!=='')):?>
+<section class="sec" id="contact"><div class="cta">
+<?=h2(v('cta','title'))?>
+<?php if(v('cta','text')!==''):?><p><?=e(v('cta','text'))?></p><?php endif;?>
+<?php if(v('cta','button')!==''):?><a class="btn" href="mailto:<?=e($email)?>"><?=e(v('cta','button'))?></a><?php endif;?>
+</div></section>
+<?php endif;?>
+</main>
+<?php if(v('site','footer')!==''):?><footer><?=e(v('site','footer'))?></footer><?php endif;?>
+<script>
+(function(){var s=document.getElementById('stage');if(!s||matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+var c=s.querySelectorAll('.chip');
+s.addEventListener('pointermove',function(e){var r=s.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
+c.forEach(function(n){var d=+n.dataset.d;n.style.transform='translate('+x*d*2+'px,'+y*d*2+'px)'})});
+s.addEventListener('pointerleave',function(){c.forEach(function(n){n.style.transform=''})});})();
+</script>
 </body>
 </html>
